@@ -1,3 +1,7 @@
-# TrainingByAutoReg
+# TrainingByAutoReg usage
+From console:
+ for multiple accounts:
+>TrainingByAutoReg.exe {number}
 
-cmd: TrainingByAutoReg.exe {count}
+for just one:
+>TrainingByAutoReg.exe
