@@ -46,6 +46,7 @@ namespace TrainingByAutoReg
 
         private static async Task<bool> RunAsync()
         {
+            Browser? browser = null;
             try
             {
                 var tempMailService = new TenMinuteMail();
@@ -62,7 +63,7 @@ namespace TrainingByAutoReg
                     LastName = Faker.Name.Last(),
                 };
 
-                Browser browser = await Puppeteer.LaunchAsync(new LaunchOptions {Headless = false});
+                browser = await Puppeteer.LaunchAsync(new LaunchOptions {Headless = false});
 
                 Page page = await browser.NewPageAsync();
                 await page.GoToAsync("https://training.by/Auth/Login?redirectUrl=#!");
@@ -109,20 +110,37 @@ namespace TrainingByAutoReg
 
                 await page.GoToAsync(activateUrl, WaitUntilNavigation.Networkidle0);
 
+                await page.EvaluateExpressionAsync("document.getElementsByClassName('message-btn')[0].click()");
                 await page.TypeAsync("#phone", account.PhoneNumber);
                 await page.SelectAsync("select[name='city']", "number:1");
                 await page.SelectAsync("select[name='city0']", "number:1");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='university0']", "number:459");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='faculty0']", "number:739");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='department0']", "number:2915");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='educationBusy0']", "number:1");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='degree0']", "number:3");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='admissionYear0']", "number:1");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='graduationYear0']", "number:2026");
+                await Task.Delay(200);
                 await page.SelectAsync("select[name='englishLevel']", "number:5");
 
-                await page.ClickAsync("button[class='button button--green save ng-binding']");
-                await page.WaitForNavigationAsync();
+                Task<Response> navTask2 = page.WaitForNavigationAsync(new NavigationOptions()
+                {
+                    WaitUntil = new[]
+                    {
+                        WaitUntilNavigation.Load,
+                        WaitUntilNavigation.Networkidle2,
+                    }
+                });
+                await page.EvaluateExpressionAsync("document.getElementById('saveProfile').click()");
+                await navTask2;
 
                 var accountsFilePath = Path.Combine(AppContext.BaseDirectory, "accounts.txt");
                 if (new FileInfo(accountsFilePath).Exists == false)
@@ -132,15 +150,19 @@ namespace TrainingByAutoReg
 
                 await File.AppendAllTextAsync(accountsFilePath, $"{account.ToString()}\n", Encoding.UTF8);
 
-                await browser.CloseAsync();
-
-
                 return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 return false;
+            }
+            finally
+            {
+                if (browser != null)
+                {
+                    await browser.CloseAsync();
+                }
             }
         }
 
