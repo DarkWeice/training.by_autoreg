@@ -1,4 +1,4 @@
-# Training.by semi-auto accounts creator
+# Training.by semi-auto accounts registrator
 ## Usage:
 From console:
 
