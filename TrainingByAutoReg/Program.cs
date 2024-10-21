@@ -74,8 +74,6 @@ namespace TrainingByAutoReg
                         WaitUntilNavigation.Networkidle0
                     }
                 });
-                await page.ClickAsync("#registerNow");
-                await navTask1;
 
                 await page.TypeAsync("#email", $"{account.Login}");
                 await page.ClickAsync("#kc-login-step1");
