@@ -9,7 +9,7 @@ namespace TrainingByAutoReg
 {
     internal class TestProgram
     {
-
+        // test
         private struct Account
         {
             public string Email { get; set; }
