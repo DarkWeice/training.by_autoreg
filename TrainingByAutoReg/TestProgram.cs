@@ -4,6 +4,9 @@ using System.Security.Principal;
 using PuppeteerSharp;
 using PuppeteerExtraSharp;
 using PuppeteerExtraSharp.Plugins.ExtraStealth;
+using Newtonsoft.Json;
+using System.Text;
+using PuppeteerSharp.BrowserData;
 
 namespace TrainingByAutoReg
 {
@@ -57,11 +60,12 @@ namespace TrainingByAutoReg
 
         private static async Task<bool> RunAsync()
         {
-            Browser? browser = null;
+            IBrowser? browser = null;
             try
             {
                 GenerateNewEmailAddress generateNewEmailAddress = new GenerateNewEmailAddress();
                 string emailAddress = generateNewEmailAddress.GenerateNewEmailAddresss();
+
 
                 var account = new Account()
                 {
@@ -71,30 +75,65 @@ namespace TrainingByAutoReg
                 };
 
                 await new BrowserFetcher().DownloadAsync();
+                await Task.Delay(5000);
+                var profilePath = @"C:\Users\pakapaka\AppData\Local\Google\Chrome\User Data\Profile 1";
 
-                var launchOptions = new LaunchOptions   
+                
+                var launchOptions = new LaunchOptions
                 {
                     Headless = false, // =false for test
+                    UserDataDir = profilePath,
+                    DefaultViewport = new ViewPortOptions { Width = 800, Height = 800 }
                 };
 
-                using (var browsera = await Puppeteer.LaunchAsync(launchOptions))
-                using (var page = await browsera.NewPageAsync())
+                browser = await Puppeteer.LaunchAsync(launchOptions);
+                var page = await browser.NewPageAsync();
+
+                await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+
+                await page.GoToAsync("https://www.sandbox.game/en/sign/?redirectTo=%2Fevents%2Falpha-season-4%2F&createAccount=true&mktTarget=undefined&showOnboarding=undefined");
+                var cookies = new List<CookieParam>
                 {
-                    //await page.GoToAsync("https://www.sandbox.game/en/sign");
-                    //await page.WaitForNavigationAsync();
+                    new CookieParam
+                    {
+                        Name = "my_cookie",
+                        Value = "cookie_value",
+                        Domain = "example.com", // Замените на ваш домен Path = "/",
+                        HttpOnly = false,
+                        Secure = false,
+                        SameSite = SameSite.Lax // Или CookieSameSite.Strict, в зависимости от ваших требований
+                    }
+                };
 
-                    await page.GoToAsync("https://www.sandbox.game/en/sign/");
+                await page.SetCookieAsync(cookies.ToArray());
+                Console.WriteLine("Cookies установлены:");
 
-                    var cap1 = await page.QuerySelectorAsync("switch-method__button");
-                    await cap1.ClickAsync();
-                    await page.WaitForNavigationAsync();
-
-                    //var input_mail = await page.QuerySelectorAsync("CustomInput__input");
-                    await page.TypeAsync("CustomInput__input", $"{account.Email}");
-
-                    var signup_mail = await page.QuerySelectorAsync("sign-up-email-btn");
-                    await signup_mail.ClickAsync();
+                foreach (var cookie in cookies)
+                {
+                    Console.WriteLine($"Name: {cookie.Name}, Value: {cookie.Value}");
                 }
+
+                var currentCookies = await page.GetCookiesAsync();
+                Console.WriteLine("Текущие куки:");
+
+                await page.TypeAsync("#input.textAlignLeft", $"{account.Email}");
+                await Task.Delay(500);
+                await page.WaitForSelectorAsync(".custom-button");
+                await page.ClickAsync(".custom-button");
+
+                await page.WaitForNetworkIdleAsync();
+                await Task.Delay(5000);
+
+
+                var accountsFilePath = Path.Combine(AppContext.BaseDirectory, "accounts.txt");
+                if (new FileInfo(accountsFilePath).Exists == false)
+                {
+                    File.Create(accountsFilePath).Close();
+                }
+
+                await File.AppendAllTextAsync(accountsFilePath, $"{account.ToString()}\n", Encoding.UTF8);
+
+
                 return true;
             }
             catch (Exception e)
@@ -110,6 +149,5 @@ namespace TrainingByAutoReg
                 }
             }
         }
-
     }
 }
