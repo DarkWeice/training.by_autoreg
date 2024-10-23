@@ -20,9 +20,9 @@ namespace TrainingByAutoReg
                     (builder, _) => builder.Append(pattern[random.Next(patternLength)]))
                 .ToString();
 
-            var originalAddress = new Aspose.Email.MailAddress("some.address@gmail.com");
+            var originalAddress = new Aspose.Email.MailAddress("some_address@gmail.com");
             var emailAddress = new Aspose.Email.MailAddress(
-                $"{originalAddress.User}+{generatedSuffix}@{originalAddress.Host}").ToString();
+                $"{originalAddress.User}{generatedSuffix}@{originalAddress.Host}").ToString();
             return emailAddress;
         }
     }
